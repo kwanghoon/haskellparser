@@ -1,5 +1,11 @@
 module Main where
 
+-- [NOTE]
+-- To use modules in ghc-parser-lib package,
+-- refer to https://www.stackage.org/nightly-2019-09-04/package/ghc-lib-parser-8.8.0.20190424
+--
+-- For example, import Lexer, not import GHC.Parser.Lexer. 
+
 import DynFlags
 import FastString
 import Fingerprint
