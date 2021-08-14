@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f3cf3f189b648efa8314762b17eb881b2858782070f35c0cfeae7585c3ead36a
+-- hash: bd78f8a3e49c24a7b448291fc96c4268fb4a3d34a69c848a4d267d08b4731588
 
 name:           lexer
 version:        0.1.0.0
@@ -39,6 +39,7 @@ library
 executable lexer-exe
   main-is: Main.hs
   other-modules:
+      HaskellLexer
       Paths_lexer
   hs-source-dirs:
       app
