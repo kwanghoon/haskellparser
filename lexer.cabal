@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c81dc48aa2d705b1b9d0373510a3665eda115ca45270eaec7090f85496b9da0c
+-- hash: 39fa2af7be9a4272cd4783869cb638595e25ed0d3a010e1407e72665dfa1f319
 
 name:           lexer
 version:        0.1.0.0
@@ -34,6 +34,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , hspec
     , yapb >=0.1.3
   default-language: Haskell2010
 
@@ -44,6 +45,8 @@ executable lexer-exe
       HaskellLexer
       HaskellParser
       HaskellToken
+      SyntaxCompletion
+      SyntaxCompletionSpec
       Paths_lexer
   hs-source-dirs:
       app
@@ -51,6 +54,7 @@ executable lexer-exe
   build-depends:
       base >=4.7 && <5
     , ghc-lib-parser
+    , hspec
     , lexer
     , yapb >=0.1.3
   default-language: Haskell2010
@@ -65,6 +69,7 @@ test-suite lexer-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , hspec
     , lexer
     , yapb >=0.1.3
   default-language: Haskell2010
