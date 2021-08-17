@@ -13,6 +13,9 @@ import Terminal
 
 import CommonParserUtil (runAutomaton)
 
+import System.IO
+import System.Environment (getArgs, withArgs)
+
 {-
 [Running]
 
@@ -38,7 +41,17 @@ $ stack exec lexer-exe
 --
 main :: IO ()
 main = do
-  terminalList <- mainHaskellLexer "do { x <- m; return x }"
+  args <- getArgs
+  _main args
+
+_main [] = return ()
+_main (fileName:args) = do
+  putStrLn $ "Lexing&Parsing: " ++ fileName
+  
+  text <- readFile fileName
+  
+  terminalList <- mainHaskellLexer text -- "do { x <- m; return x }"
+  
   case terminalList of
     [] -> putStrLn "failed..."
     _  -> do mapM_ (\terminal -> putStrLn $ terminalToString terminal) terminalList

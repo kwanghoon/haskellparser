@@ -159,6 +159,6 @@ instance TokenInterface Token where
   fromToken (ITtyQuote) = "TH_TY_QUOTE"
   fromToken ((ITquasiQuote _)) = "TH_QUASIQUOTE"
   fromToken ((ITqQuasiQuote _)) = "TH_QQUASIQUOTE"
-  fromToken (ITeof) = "$"
+  fromToken (ITeof) = "%eof"
   -- fromToken (???) = error
   
