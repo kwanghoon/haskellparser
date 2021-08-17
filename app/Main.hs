@@ -55,7 +55,7 @@ _main (fileName:args) = do
   case terminalList of
     [] -> putStrLn "failed..."
     _  -> do mapM_ (\terminal -> putStrLn $ terminalToString terminal) terminalList
-             ast <- runAutomaton 0
+             ast <- runAutomaton False 0
                       haskell_actionTable haskell_gotoTable haskell_prodRules
                       pFunList terminalList
              putStrLn $ "Done: " ++ show ast

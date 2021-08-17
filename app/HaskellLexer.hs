@@ -142,7 +142,9 @@ haskellLexer = do
       case locatedToken of
         L srcspan ITeof ->
           let (start_line, start_col, end_line, end_col) = srcSpanToLineCol srcspan in
-          return (Terminal (fromToken ITeof) start_line start_col (Just ITeof) : Terminal (fromToken ITvccurly) start_line start_col (Just ITvccurly) : s)
+          return (Terminal (fromToken ITeof) start_line start_col (Just ITeof)
+                  : Terminal (fromToken ITvccurly) start_line start_col (Just ITvccurly) --Todo: hard coding!!
+                  : s)
           
         L srcspan tok ->
           -- tokInfos ((srcSpanToLineCol srcspan, tok) : s)
