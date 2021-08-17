@@ -127,7 +127,9 @@ haskellLexer = do
   where
     -- Haskell lexer getting a single token
     singleHaskellToken :: P (Located Token)
-    singleHaskellToken = Lexer.lexer False  (\locatedToken -> P (\pstate -> POk pstate locatedToken))
+    singleHaskellToken =
+      Lexer.lexer False
+        (\locatedToken -> P (\pstate -> POk pstate locatedToken))
 
     tokInfos :: [TokenInfo] -> P [TokenInfo]
     tokInfos s = do
