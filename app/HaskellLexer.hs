@@ -1,10 +1,14 @@
-module HaskellLexer (TokenInfo, mainHaskellLexer, prTokInfos) where
+module HaskellLexer (mainHaskellLexer) where
 
 -- [NOTE]
 -- To use modules in ghc-parser-lib package,
 -- refer to https://www.stackage.org/nightly-2019-09-04/package/ghc-lib-parser-8.8.0.20190424
 --
--- For example, import Lexer, not import GHC.Parser.Lexer. 
+-- For example, import Lexer, not import GHC.Parser.Lexer.
+
+import Terminal
+import TokenInterface
+import HaskellToken
 
 import DynFlags
 import FastString
@@ -17,6 +21,7 @@ import SrcLoc (Located, GenLocated(..), SrcSpan(..)
               , srcSpanStartLine, srcSpanStartCol, srcSpanEndLine, srcSpanEndCol)
 import StringBuffer
 import ToolSettings
+
 
 {-
 [Lexer]
@@ -93,22 +98,14 @@ $ stack exec lexer-exe
 -}
 
 --
-mainHaskellLexer :: String -> IO [TokenInfo]
+mainHaskellLexer :: String -> IO [Terminal Token]
 mainHaskellLexer str = do
   case runHaskellLexer str of
     POk parseState ss  -> return ss
     PFailed parseState -> return [] -- putStrLn "PFailed..."
 
-prTokInfos :: [TokenInfo] -> IO ()
-prTokInfos ss =
-  mapM_
-    (\(srcSpan,tokName) -> do
-        putStr (show srcSpan ++ ": ")
-        putStrLn tokName)
-    ss
-
 -- Actually, run a lexer
-runHaskellLexer :: String -> ParseResult [TokenInfo]
+runHaskellLexer :: String -> ParseResult [Terminal Token]
 runHaskellLexer str = unP haskellLexer parseState
   where
     filename = "<interactive>"
@@ -118,9 +115,17 @@ runHaskellLexer str = unP haskellLexer parseState
 
 -- Haskell lexer getting all tokens until ITeof
 type MyRealSrcSpan = (Int,Int,Int,Int)
-type TokenInfo = (MyRealSrcSpan,String)
+-- type TokenInfo = (MyRealSrcSpan,String)
 
-haskellLexer :: P [TokenInfo]
+-- prTokInfos :: [TokenInfo] -> IO ()
+-- prTokInfos ss =
+--   mapM_
+--     (\(srcSpan,tokName) -> do
+--         putStr (show srcSpan ++ ": ")
+--         putStrLn tokName)
+--     ss
+
+haskellLexer :: P [Terminal Token]
 haskellLexer = do
   ss <- tokInfos []
   return (reverse ss)
@@ -131,13 +136,18 @@ haskellLexer = do
       Lexer.lexer False
         (\locatedToken -> P (\pstate -> POk pstate locatedToken))
 
-    tokInfos :: [TokenInfo] -> P [TokenInfo]
+    tokInfos :: [Terminal Token] -> P [Terminal Token]
     tokInfos s = do
       locatedToken <- singleHaskellToken
       case locatedToken of
-        L _ ITeof -> return s
+        L srcspan ITeof ->
+          let (start_line, start_col, end_line, end_col) = srcSpanToLineCol srcspan in
+          return (Terminal (fromToken ITeof) start_line start_col (Just ITeof) : s)
+          
         L srcspan tok ->
-          tokInfos ((srcSpanToLineCol srcspan, show tok) : s)
+          -- tokInfos ((srcSpanToLineCol srcspan, tok) : s)
+          let (start_line, start_col, end_line, end_col) = srcSpanToLineCol srcspan in
+          tokInfos (Terminal (fromToken tok) start_line start_col (Just tok) : s)
 
     srcSpanToLineCol :: SrcSpan -> MyRealSrcSpan
     srcSpanToLineCol (RealSrcSpan realSrcSpan') =

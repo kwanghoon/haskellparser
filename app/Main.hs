@@ -7,7 +7,7 @@ module Main where
 -- For example, import Lexer, not import GHC.Parser.Lexer. 
 
 import HaskellLexer
-
+import Terminal
 
 {-
 [Running]
@@ -34,8 +34,8 @@ $ stack exec lexer-exe
 --
 main :: IO ()
 main = do
-  tokenInfos <- mainHaskellLexer "do { x <- m; return x }"
-  case tokenInfos of
+  terminalList <- mainHaskellLexer "do { x <- m; return x }"
+  case terminalList of
     [] -> putStrLn "failed..."
-    _  -> prTokInfos tokenInfos
+    _  -> mapM_ (\terminal -> putStrLn $ terminalToString terminal) terminalList
 
