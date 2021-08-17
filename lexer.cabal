@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0e9e70832ce3a1317e22e864ff163f73bc464ef77d9129c188497fd8f6c6e0e7
+-- hash: c81dc48aa2d705b1b9d0373510a3665eda115ca45270eaec7090f85496b9da0c
 
 name:           lexer
 version:        0.1.0.0
@@ -40,7 +40,9 @@ library
 executable lexer-exe
   main-is: Main.hs
   other-modules:
+      HaskellAST
       HaskellLexer
+      HaskellParser
       HaskellToken
       Paths_lexer
   hs-source-dirs:

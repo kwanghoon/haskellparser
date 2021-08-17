@@ -7,7 +7,11 @@ module Main where
 -- For example, import Lexer, not import GHC.Parser.Lexer. 
 
 import HaskellLexer
+import HaskellParser
+import HaskellAST
 import Terminal
+
+import CommonParserUtil (runAutomaton)
 
 {-
 [Running]
@@ -37,5 +41,9 @@ main = do
   terminalList <- mainHaskellLexer "do { x <- m; return x }"
   case terminalList of
     [] -> putStrLn "failed..."
-    _  -> mapM_ (\terminal -> putStrLn $ terminalToString terminal) terminalList
+    _  -> do mapM_ (\terminal -> putStrLn $ terminalToString terminal) terminalList
+             ast <- runAutomaton 0
+                      haskell_actionTable haskell_gotoTable haskell_prodRules
+                      pFunList terminalList
+             putStrLn $ "Done: " ++ show ast
 
