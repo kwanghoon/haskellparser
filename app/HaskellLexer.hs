@@ -90,7 +90,8 @@ mainHaskellLexerWithLineColumn line0 col0 str = do
   case runHaskellLexer str of
     POk parseState (line, col, ss)  ->
       return (line+line0-1, col+col0-1,
-              map (\(Terminal text l c tok) -> Terminal text (l+line0-1) (c+col0-1) tok) ss)
+               map (\(Terminal text l c tok) -> Terminal text (l+line0-1) (c+col0-1) tok)
+                 (ss  ++ [ Terminal (fromToken ITeof) line col (Just ITeof) ]))
     PFailed parseState -> return (0, 0, []) -- putStrLn "PFailed..."
 
 -- Actually, run a lexer

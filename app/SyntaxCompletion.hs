@@ -22,14 +22,14 @@ import Control.Exception
 --                  programTextUptoCursor, programTextAfterCursor
 
 -- | computeCand
-computeCand :: Bool -> String -> String -> Bool -> IO [EmacsDataItem]
-computeCand debug programTextUptoCursor programTextAfterCursor isSimpleMode = (do
+computeCand :: Bool -> Int -> String -> String -> Bool -> IO [EmacsDataItem]
+computeCand debug maxLevel programTextUptoCursor programTextAfterCursor isSimpleMode = (do
   {- 1. Lexing  -}                                                                         
   (line, column, terminalListUptoCursor)  <-
     mainHaskellLexerWithLineColumn 1 1 programTextUptoCursor
 
   {- 2. Parsing -}
-  ((do ast <- runAutomaton False 0
+  ((do ast <- runAutomaton debug 0
                       haskell_actionTable haskell_gotoTable haskell_prodRules
                       pFunList terminalListUptoCursor
        successfullyParsed)
@@ -40,6 +40,6 @@ computeCand debug programTextUptoCursor programTextAfterCursor isSimpleMode = (d
           {- 3. Lexing the rest and computing candidates with it -}
           do (_, _, terminalListAfterCursor) <-
                mainHaskellLexerWithLineColumn line column programTextAfterCursor
-             handleParseError debug isSimpleMode terminalListAfterCursor parseError))
+             handleParseError debug maxLevel isSimpleMode terminalListAfterCursor parseError))
 
   `catch` \lexError ->  case lexError :: LexError of  _ -> handleLexError

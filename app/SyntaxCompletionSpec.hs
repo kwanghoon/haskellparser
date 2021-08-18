@@ -6,14 +6,15 @@ import Test.Hspec
 
 import System.IO (readFile)
 
-spec = hspec $ do
-  describe "syntax complection yapb/app/syntaxcompletion" $ do
-    let hscode = "module Main where\n\n main = "
+spec debug maxLevel = hspec $ do
+  describe "syntax complection hslexer/app/syntaxcompletion" $ do
+    let hscode = "module Main where\n\n main = do "
+    let hscode_after = ""
     it ("[simple] " ++ hscode) $ do
-      results <- computeCand False hscode "" True
+      results <- computeCand debug maxLevel hscode hscode_after True
       results `shouldBe` []
 
     it ("[nested] " ++ hscode) $ do
-      results <- computeCand False hscode "" False
+      results <- computeCand debug maxLevel hscode hscode_after False
       results `shouldBe` []
 

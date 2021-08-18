@@ -30,10 +30,24 @@ main :: IO ()
 main = do
   args <- getArgs
   if "test" `elem` args
-  then withArgs [] spec
+  then do maxLevel <- getMaxLevel
+          debug <- getDebugOption
+          withArgs [] $ spec debug maxLevel
   else if "emacs" `elem` args
-  then emacsServer (computeCand False)
+  then do maxLevel <- getMaxLevel
+          emacsServer (computeCand False maxLevel)
   else _main args
+
+  where
+    getMaxLevel = do
+      putStrLn "Max level for search: "
+      maxLevel_str <- getLine
+      return (read maxLevel_str :: Int)
+
+    getDebugOption = do
+      putStrLn "Debug option (True/False): "
+      debug <- getLine
+      return (read debug :: Bool)
 
 _main [] = return ()
 _main (fileName:args) = do
