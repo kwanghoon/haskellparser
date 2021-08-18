@@ -40,7 +40,7 @@ main = do
 
   where
     getMaxLevel = do
-      putStrLn "Max level for search: "
+      putStrLn "Max level for search (e.g., 100): "
       maxLevel_str <- getLine
       return (read maxLevel_str :: Int)
 
