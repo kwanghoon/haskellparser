@@ -1,4 +1,4 @@
-module SyntaxCompletion (computeCand) where
+module SyntaxCompletion (computeCand, computeCandHaskell) where
 
 import Lexer(Token(..))
 
@@ -22,16 +22,20 @@ import Control.Exception
 --                  programTextUptoCursor, programTextAfterCursor
 
 -- | computeCand
-computeCand :: Bool -> Int -> String -> String -> Bool -> IO [EmacsDataItem]
-computeCand debug maxLevel programTextUptoCursor programTextAfterCursor isSimpleMode = (do
+computeCand debug maxLevel programTextUptoCursor programTextAfterCursor isSimpleMode =
+  computeCandHaskell debug maxLevel programTextUptoCursor programTextAfterCursor isSimpleMode Nothing
+                                                                                                  
+computeCandHaskell :: Bool -> Int -> String -> String -> Bool -> Maybe Token -> IO [EmacsDataItem]
+computeCandHaskell debug maxLevel programTextUptoCursor programTextAfterCursor isSimpleMode haskellOption = (do
   {- 1. Lexing  -}                                                                         
   (line, column, terminalListUptoCursor)  <-
     mainHaskellLexerWithLineColumn 1 1 programTextUptoCursor
 
   {- 2. Parsing -}
-  ((do ast <- runAutomaton debug 0
+  ((do ast <- runAutomatonHaskell debug 0
                       haskell_actionTable haskell_gotoTable haskell_prodRules
                       pFunList terminalListUptoCursor
+                      haskellOption
        successfullyParsed)
 
     `catch` \parseError ->

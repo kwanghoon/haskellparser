@@ -1,20 +1,25 @@
 module SyntaxCompletionSpec where
 
-import SyntaxCompletion (computeCand)
+import Lexer(Token(..))
+import SyntaxCompletion (computeCandHaskell)
 import SynCompInterface
 import Test.Hspec
 
 import System.IO (readFile)
 
-spec debug maxLevel = hspec $ do
-  describe "syntax complection hslexer/app/syntaxcompletion" $ do
-    let hscode = "module Main where\n\n main = do "
-    let hscode_after = ""
-    it ("[simple] " ++ hscode) $ do
-      results <- computeCand debug maxLevel hscode hscode_after True
-      results `shouldBe` []
+spec debug maxLevel args = do
+  nameHscodes <- mapM (\arg -> do text <- readFile arg; return (arg,text)) args
+  let hscode_after = ""
+  
+  hspec $ do
+    describe "syntax complection hslexer/app/syntaxcompletion" $ do
 
-    it ("[nested] " ++ hscode) $ do
-      results <- computeCand debug maxLevel hscode hscode_after False
-      results `shouldBe` []
+      mapM_ (\(name,hscode) -> 
+        it ("[simple] " ++ name) $ do
+          results <- computeCandHaskell debug maxLevel hscode hscode_after True (Just ITvccurly)
+          results `shouldBe` []) nameHscodes
+
+      -- it ("[nested] " ++ name) $ do
+      --   results <- computeCandHaskell debug maxLevel hscode hscode_after False (Just ITvccurly)
+      --   results `shouldBe` []
 

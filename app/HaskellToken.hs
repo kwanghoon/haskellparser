@@ -2,6 +2,7 @@ module HaskellToken where
 
 import Lexer(Token(..))
 import SrcLoc
+import FastString
 
 import TokenInterface
 
@@ -127,12 +128,12 @@ instance TokenInterface Token where
   fromToken (ITsimpleQuote) = "SIMPLEQUOTE"
   fromToken ((ITvarid    _)) = "VARID"
   fromToken ((ITconid    _)) = "CONID"
-  fromToken ((ITvarsym   _)) = "VARSYM"
-  fromToken ((ITconsym   _)) = "CONSYM"
+  fromToken ((ITvarsym   fs)) = "VARSYM" -- unpackFS fs 
+  fromToken ((ITconsym   fs)) = "CONSYM" -- unpackFS fs 
   fromToken ((ITqvarid   _)) = "QVARID"
   fromToken ((ITqconid   _)) = "QCONID"
-  fromToken ((ITqvarsym  _)) = "QVARSYM"
-  fromToken ((ITqconsym  _)) = "QCONSYM"
+  fromToken ((ITqvarsym  (fs1,fs2))) = "QVARSYM" -- unpackFS fs1 ++ "." ++ unpackFS fs2 
+  fromToken ((ITqconsym  (fs1,fs2))) = "QCONSYM" -- unpackFS fs1 ++ "." ++ unpackFS fs2 
   fromToken ((ITdo)) = "DO"                      -- ITdo _
   fromToken ((ITmdo)) = "MDO"                  -- ITmdo _ 
   fromToken ((ITdupipvarid   _)) = "IPDUPVARID"
@@ -162,3 +163,9 @@ instance TokenInterface Token where
   fromToken (ITeof) = "%eof"
   -- fromToken (???) = error
   
+hiddenText (ITvarsym fs) = unpackFS fs
+hiddenText (ITconsym fs) = unpackFS fs
+hiddenText (ITqvarsym (fs1,fs2)) = unpackFS fs1 ++ ".<" ++ unpackFS fs2 ++ ">"
+hiddenText (ITqconsym (fs1,fs2)) = unpackFS fs1 ++ ".<" ++ unpackFS fs2 ++ ">"
+hiddenText token = fromToken token
+

@@ -7,12 +7,13 @@ module Main where
 -- For example, import Lexer, not import GHC.Parser.Lexer. 
 
 -- | Lexing & Parsing
+import Lexer(Token(..))
 import HaskellLexer
 import HaskellParser
 import HaskellAST
 import Terminal
 
-import CommonParserUtil (runAutomaton)
+import CommonParserUtil (runAutomatonHaskell)
 
 import System.IO
 import System.Environment (getArgs, withArgs)
@@ -20,7 +21,7 @@ import System.Environment (getArgs, withArgs)
 -- | syntax completion
 import EmacsServer
 
-import SyntaxCompletion (computeCand)
+import SyntaxCompletion (computeCandHaskell)
 import SyntaxCompletionSpec (spec)
 
 
@@ -29,40 +30,46 @@ import SyntaxCompletionSpec (spec)
 main :: IO ()
 main = do
   args <- getArgs
-  if "test" `elem` args
+  if null args /= True && "test" == head args
   then do maxLevel <- getMaxLevel
           debug <- getDebugOption
-          withArgs [] $ spec debug maxLevel
-  else if "emacs" `elem` args
+          withArgs [] $ spec debug maxLevel (tail args)
+  else if null args /= True && "emacs" == head args
   then do maxLevel <- getMaxLevel
-          emacsServer (computeCand False maxLevel)
+          emacsServer
+            (\ptuc ptac ism -> computeCandHaskell False maxLevel ptuc ptac ism (Just ITvccurly))
   else _main args
 
-  where
-    getMaxLevel = do
-      putStrLn "Max level for search (e.g., 100): "
-      maxLevel_str <- getLine
-      return (read maxLevel_str :: Int)
+getMaxLevel = do
+  putStrLn "Max level for search (e.g., 100): "
+  maxLevel_str <- getLine
+  return (read maxLevel_str :: Int)
 
-    getDebugOption = do
-      putStrLn "Debug option (True/False): "
-      debug <- getLine
-      return (read debug :: Bool)
+getDebugOption = do
+  putStrLn "Debug option (True/False): "
+  debug <- getLine
+  return (read debug :: Bool)
 
 _main [] = return ()
 _main (fileName:args) = do
-  putStrLn $ "Lexing&Parsing: " ++ fileName
+  putStrLn $ "Reading: " ++ fileName
   
   text <- readFile fileName
   
+  putStrLn $ "Lexing: "
   terminalList <- mainHaskellLexer text
   
   case terminalList of
     [] -> putStrLn "failed..."
-    _  -> do mapM_ (\terminal -> putStrLn $ terminalToString terminal) terminalList
-             ast <- runAutomaton False 0
+    _  -> do putStrLn $ "Parsing: "
+             debugOpt <- getDebugOption
+             mapM_ (\terminal -> putStrLn $ terminalToString terminal) terminalList
+             putStrLn ""
+             ast <- runAutomatonHaskell debugOpt 0
                       haskell_actionTable haskell_gotoTable haskell_prodRules
                       pFunList terminalList
+                      (Just ITvccurly) -- Haskell option
+             putStrLn ""
              putStrLn $ "Done: " ++ show ast
 
 

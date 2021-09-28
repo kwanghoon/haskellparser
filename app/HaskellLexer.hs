@@ -81,8 +81,9 @@ mainHaskellLexer :: String -> IO [Terminal Token]
 mainHaskellLexer str = do
   case runHaskellLexer str of
     POk parseState (line, col, ss)  ->
-      return (ss ++ [ Terminal (fromToken ITvccurly) line col (Just ITvccurly)
-                    , Terminal (fromToken ITeof) line col (Just ITeof) ])
+      return (ss ++ [ Terminal (fromToken ITeof) line col (Just ITeof) ])
+      -- return (ss ++ [ Terminal (fromToken ITvccurly) line col (Just ITvccurly)
+      --               , Terminal (fromToken ITeof) line col (Just ITeof) ])
     PFailed parseState -> return [] -- putStrLn "PFailed..."
 
 mainHaskellLexerWithLineColumn :: Line -> Column -> String -> IO (Line, Column, [Terminal Token])
@@ -138,9 +139,8 @@ haskellLexer = do
           return (end_line, end_col, s)
           
         L srcspan tok ->
-          -- tokInfos ((srcSpanToLineCol srcspan, tok) : s)
           let (start_line, start_col, end_line, end_col) = srcSpanToLineCol srcspan in
-          tokInfos (Terminal (fromToken tok) start_line start_col (Just tok) : s)
+          tokInfos (Terminal (hiddenText tok) start_line start_col (Just tok) : s)
 
     srcSpanToLineCol :: SrcSpan -> MyRealSrcSpan
     srcSpanToLineCol (RealSrcSpan realSrcSpan') =

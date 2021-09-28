@@ -1,0 +1,185 @@
+
+
+a list of terminals <- haskell lexer
+
+either ast
+ or a list of candidates
+    <- (runAutomaon by YAPB) haskell parser automaton
+
+
+
+---
+
+Haskell layout rule의 핵심
+
+ (*) t:ts  t에서 파스 에러가 발생했는데 t대신 }를 넣어보니 파스 에러가 발생하지 않았다면 }를 추가
+
+
+
+--
+
+module Main where
+
+main = do x <- <TAB>
+
+S431
+
+Stack S154 : bindpat : S392 : vocurly : S182 : DO : S720 : = : S319 :
+      opt_sig : S235 : infixexp : S791 : topdecls_cs_semi : S787 :
+      importdecls_semi : S261 : semis : S1093 : vocurly : S1085 : where :
+      S792 : maybeexports : S784 : maybemodwarning : S262 : modid : S258 :
+      module : S0 : STACK END
+
+Goto table
+
+    ((431,"quasiquote"),143),
+    ((431,"exp"),604),
+    ((431,"infixexp"),145),
+    ((431,"exp10"),146),
+    ((431,"prag_e"),147),
+    ((431,"fexp"),148),
+    ((431,"aexp"),149),
+    ((431,"aexp1"),150),
+    ((431,"aexp2"),151),
+    ((431,"splice_untyped"),152),
+    ((431,"splice_typed"),153),
+    ((431,"ipvar"),158),
+    ((431,"overloaded_label"),159),
+    ((431,"qcon"),160),
+    ((431,"gen_qcon"),114),
+    ((431,"sysdcon_nolist"),115),
+    ((431,"sysdcon"),116),
+    ((431,"qvar"),161),
+    ((431,"qvarid"),15),
+    ((431,"varid"),16),
+    ((431,"special_id"),17),
+    ((431,"qconid"),124),
+    ((431,"conid"),125),
+    ((431,"literal"),162),
+    ((431,"exp_prag__exp__"),163),
+
+Nonterminals worth to explore (16/25)
+    exp, infixexp, exp10, fexp, aexp, aexp1, aexp2, overloaded_label, qcon, gen_qcon, 
+    qvar, qvarid, varid, qconid, conid, literal
+
+
+
+
+Haskell $, ++를 VARSYM으로 처리?
+
+  -- Ex4.hs
+  module Main where
+
+  main = do x <- return $ "a123" ++ "b456"
+
+  -- terminals
+  module at (1, 1): module
+  CONID at (1, 8): CONID
+  where at (1, 13): where
+  vocurly at (3, 1): vocurly
+  VARID at (3, 1): VARID
+  = at (3, 6): =
+  DO at (3, 8): DO
+  vocurly at (3, 11): vocurly
+  VARID at (3, 11): VARID
+  <- at (3, 13): <-
+  VARID at (3, 16): VARID
+  VARSYM at (3, 23): VARSYM
+  STRING at (3, 25): STRING
+  VARSYM at (3, 32): VARSYM
+  STRING at (3, 35): STRING
+  vccurly at (4, 1): vccurly
+  ; at (4, 1): ;
+  lookActionTable failed (1st) with: "%eof at (4, 1): %eof"
+  lookActionTable succeeded (snd) with: "vccurly at (4, 1): vccurly"
+  vccurly at (4, 1): vccurly
+  %eof at (4, 1): %eof
+
+
+-- Haskell의 Nonterminals을 최대한 숨기는 스타일의 문법 
+
+   In Parser.y:
+
+    3) if x then y else z + 1   -- (NB: '+' is in VARSYM)
+
+    VARSYM         { L _ (ITvarsym   _) }
+
+    ==> VARSYM을 ...으로 표현하지 않고 ITvarsym에 들어있는 텍스트를 꺼내어 대체
+
+  -- terminals
+  module at (1, 1): module
+  CONID at (1, 8): CONID
+  where at (1, 13): where
+  vocurly at (3, 1): vocurly
+  VARID at (3, 1): VARID
+  = at (3, 6): =
+  DO at (3, 8): DO
+  vocurly at (3, 11): vocurly
+  VARID at (3, 11): VARID
+  <- at (3, 13): <-
+  VARID at (3, 16): VARID
+  $ at (3, 23): VARSYM
+  STRING at (3, 25): STRING
+  ++ at (3, 32): VARSYM
+  STRING at (3, 35): STRING
+  vccurly at (4, 1): vccurly
+  ; at (4, 1): ;
+  lookActionTable failed (1st) with: "%eof at (4, 1): %eof"
+  lookActionTable succeeded (snd) with: "vccurly at (4, 1): vccurly"
+  vccurly at (4, 1): vccurly
+  %eof at (4, 1): %eof
+
+
+--
+
+Given
+
+module Main where
+
+main = do x <-
+
+
+Here are candidates:
+
+    Candidate "exp",
+    Candidate "prag_e prag_e prag_e quasiquote",
+    Candidate "prag_e prag_e prag_e exp",
+    Candidate "prag_e prag_e prag_e infixexp",
+    Candidate "prag_e prag_e prag_e exp10",
+    Candidate "prag_e prag_e prag_e prag_e",
+    Candidate "prag_e prag_e prag_e fexp",
+    Candidate "prag_e prag_e prag_e aexp",
+    Candidate "prag_e prag_e prag_e aexp1",
+    Candidate "prag_e prag_e prag_e aexp2",
+    Candidate "prag_e prag_e prag_e splice_untyped",
+    Candidate "prag_e prag_e prag_e splice_typed",
+    Candidate "prag_e prag_e prag_e ipvar",
+    Candidate "prag_e prag_e prag_e overloaded_label",
+    Candidate "prag_e prag_e prag_e qcon",
+    Candidate "prag_e prag_e prag_e gen_qcon",
+    Candidate "prag_e prag_e prag_e sysdcon_nolist",
+    Candidate "prag_e prag_e prag_e sysdcon",
+    Candidate "prag_e prag_e prag_e qvar",
+    Candidate "prag_e prag_e prag_e qvarid",
+    Candidate "prag_e prag_e prag_e varid",
+    Candidate "prag_e prag_e prag_e special_id",
+    Candidate "prag_e prag_e prag_e qconid",
+    Candidate "prag_e prag_e prag_e conid",
+    Candidate "prag_e prag_e prag_e literal",
+    Candidate "prag_e prag_e prag_e exp_prag__exp__"
+
+
+-- 4.4.2 Fixity declarations (Table 4.1)
+
+   + predefined operators
+
+-- Definition of Simple mode?
+
+   Given aexp -> 'let' binds 'in' exp
+
+    let hscode4 = "module Main where\n\n main = let x"
+       vs. 
+    let hscode4 = "module Main where\n\n main = let x = 123 "
+
+   nested mode에서 몇 번 reduce해야 in을 생성할지 고정된 숫자를 미리 제시하기 어려움
+   
