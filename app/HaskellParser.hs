@@ -1,7 +1,7 @@
 module HaskellParser where
 
 import AutomatonType
-  
+
 -- ProdRules:
 
 haskell_prodRules :: ProdRules

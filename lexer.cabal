@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fc502508fa51795d842840568ffa5270fb0888034fd90f6feffb62cb959753ad
+-- hash: 91eecc96e085f133605911823568cbefa50dc317b999968bff350257dfa5970a
 
 name:           lexer
 version:        0.1.0.0
@@ -44,6 +44,7 @@ executable lexer-exe
       HaskellAST
       HaskellLexer
       HaskellParser
+      HaskellParserUtil
       HaskellToken
       SyntaxCompletion
       SyntaxCompletionSpec

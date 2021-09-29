@@ -13,7 +13,7 @@ import HaskellParser
 import HaskellAST
 import Terminal
 
-import CommonParserUtil (runAutomatonHaskell)
+import CommonParserUtil (runAutomatonHaskell, AutomatonSpec(..))
 
 import System.IO
 import System.Environment (getArgs, withArgs)
@@ -65,9 +65,9 @@ _main (fileName:args) = do
              debugOpt <- getDebugOption
              mapM_ (\terminal -> putStrLn $ terminalToString terminal) terminalList
              putStrLn ""
-             ast <- runAutomatonHaskell debugOpt 0
-                      haskell_actionTable haskell_gotoTable haskell_prodRules
-                      pFunList terminalList
+             ast <- runAutomatonHaskell debugOpt (AutomatonSpec { am_initState=0,
+                      am_actionTbl=haskell_actionTable, am_gotoTbl=haskell_gotoTable, am_prodRules=haskell_prodRules,
+                      am_parseFuns=pFunList}) terminalList
                       (Just ITvccurly) -- Haskell option
              putStrLn ""
              putStrLn $ "Done: " ++ show ast

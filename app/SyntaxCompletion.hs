@@ -7,6 +7,7 @@ import HaskellParser
 import HaskellAST
 import HaskellToken
 import Terminal
+import HaskellParserUtil
 
 import CommonParserUtil 
 
@@ -32,9 +33,9 @@ computeCandHaskell debug maxLevel programTextUptoCursor programTextAfterCursor i
     mainHaskellLexerWithLineColumn 1 1 programTextUptoCursor
 
   {- 2. Parsing -}
-  ((do ast <- runAutomatonHaskell debug 0
-                      haskell_actionTable haskell_gotoTable haskell_prodRules
-                      pFunList terminalListUptoCursor
+  ((do ast <- runAutomatonHaskell debug (AutomatonSpec { am_initState=0,
+                      am_actionTbl=haskell_actionTable, am_gotoTbl=haskell_gotoTable, am_prodRules=haskell_prodRules,
+                      am_parseFuns=pFunList}) terminalListUptoCursor
                       haskellOption
        successfullyParsed)
 
@@ -44,6 +45,13 @@ computeCandHaskell debug maxLevel programTextUptoCursor programTextAfterCursor i
           {- 3. Lexing the rest and computing candidates with it -}
           do (_, _, terminalListAfterCursor) <-
                mainHaskellLexerWithLineColumn line column programTextAfterCursor
-             handleParseError debug maxLevel isSimpleMode terminalListAfterCursor parseError))
+             handleParseError
+               (HandleParseError {
+                   debugFlag=debug,
+                   searchMaxLevel=maxLevel,
+                   simpleOrNested=isSimpleMode,
+                   postTerminalList=terminalListAfterCursor,
+                   nonterminalToStringMaybe=Just haskell_convFun})
+               parseError))
 
   `catch` \lexError ->  case lexError :: LexError of  _ -> handleLexError

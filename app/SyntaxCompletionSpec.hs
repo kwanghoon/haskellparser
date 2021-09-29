@@ -14,12 +14,15 @@ spec debug maxLevel args = do
   hspec $ do
     describe "syntax complection hslexer/app/syntaxcompletion" $ do
 
-      mapM_ (\(name,hscode) -> 
+      mapM_ (\(name,hscode) -> do
         it ("[simple] " ++ name) $ do
           results <- computeCandHaskell debug maxLevel hscode hscode_after True (Just ITvccurly)
-          results `shouldBe` []) nameHscodes
+          results `shouldBe` []
+          
+        it ("[nested] " ++ name) $ do
+          results <- computeCandHaskell debug maxLevel hscode hscode_after False (Just ITvccurly)
+          results `shouldBe` []
 
-      -- it ("[nested] " ++ name) $ do
-      --   results <- computeCandHaskell debug maxLevel hscode hscode_after False (Just ITvccurly)
-      --   results `shouldBe` []
+            ) nameHscodes
+
 
