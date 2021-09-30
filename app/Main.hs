@@ -11,7 +11,10 @@ import Lexer(Token(..))
 import HaskellLexer
 import HaskellParser
 import HaskellAST
+import HaskellParserUtil
+
 import Terminal
+import SyntaxCompletion (computeCandHaskell, CC_HaskellOption(..))
 
 import CommonParserUtil (runAutomatonHaskell, AutomatonSpec(..))
 
@@ -34,10 +37,21 @@ main = do
   then do maxLevel <- getMaxLevel
           debug <- getDebugOption
           withArgs [] $ spec debug maxLevel (tail args)
+  else if null args /= True && "candidate" == head args
+  then do maxLevel <- getMaxLevel
+          debug <- getDebugOption
+          withArgs [] $ _mainGenCand False debug maxLevel (tail args)
+  else if null args /= True && "candidateinfo" == head args
+  then do maxLevel <- getMaxLevel
+          debug <- getDebugOption
+          withArgs [] $ _mainGenCand True debug maxLevel (tail args)
   else if null args /= True && "emacs" == head args
   then do maxLevel <- getMaxLevel
           emacsServer
-            (\ptuc ptac ism -> computeCandHaskell False maxLevel ptuc ptac ism (Just ITvccurly))
+            (\ptuc ptac ism -> computeCandHaskell False maxLevel ptuc ptac ism
+                                 (CC_HaskellOption {
+                                    vccurly_token=Just ITvccurly,
+                                    nonterminalFormatFun=Just haskell_convFun}))
   else _main args
 
 getMaxLevel = do
@@ -72,4 +86,21 @@ _main (fileName:args) = do
              putStrLn ""
              putStrLn $ "Done: " ++ show ast
 
-
+_mainGenCand withInfo debug maxLevel [] = return ()
+_mainGenCand withInfo debug maxLevel (fileName:args) = do
+  putStrLn "Haskell code:"
+  hscode_before <- readFile fileName
+  let hscode_after = ""
+  putStrLn "[before]"
+  putStrLn hscode_before
+  putStrLn "[after]"
+  putStrLn hscode_after
+  
+  putStrLn "Computing...:"
+  results <- computeCandHaskell debug maxLevel hscode_before hscode_after True
+                        (CC_HaskellOption {
+                          vccurly_token=Just ITvccurly,
+                          nonterminalFormatFun=if withInfo then Just haskell_convFun else Nothing})
+  putStrLn "Candidates:"
+  mapM_ putStrLn $ map show results
+  _mainGenCand withInfo debug maxLevel args
