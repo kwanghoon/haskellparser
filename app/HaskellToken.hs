@@ -88,7 +88,7 @@ instance TokenInterface Token where
   fromToken (ITcolon) = ":"
   fromToken ((ITdcolon _)) = "::"
   fromToken (ITequal) = "="
-  fromToken (ITlam) = "\\"
+  fromToken (ITlam) = "\\\\"
   fromToken (ITlcase) = "lcase"
   fromToken (ITvbar) = "|"
   fromToken ((ITlarrow _)) = "<-"
