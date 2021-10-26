@@ -1,0 +1,136 @@
+module Main where
+
+main = do
+  putStr hello
+  putStrLn world
+  where
+    hello = "Hello"
+
+world = " World!!"
+
+
+[Lexer only]
+
+module at (1, 1): module
+CONID at (1, 8): CONID
+where at (1, 13): where
+vocurly at (3, 1): vocurly <== 
+VARID at (3, 1): VARID
+= at (3, 6): =
+DO at (3, 8): DO
+vocurly at (4, 3): vocurly <==
+VARID at (4, 3): VARID
+VARID at (4, 10): VARID
+; at (5, 3): ;             <==
+VARID at (5, 3): VARID
+VARID at (5, 12): VARID
+; at (6, 3): ;             <==
+where at (6, 3): where
+vocurly at (7, 5): vocurly <==
+VARID at (7, 5): VARID
+= at (7, 11): =
+STRING at (7, 13): STRING
+vccurly at (9, 1): vccurly <==
+vccurly at (9, 1): vccurly <==
+; at (9, 1): ;             <==
+VARID at (9, 1): VARID
+= at (9, 7): =
+STRING at (9, 9): STRING
+; at (12, 1): ;            <==
+%eof at (12, 1): %eof
+
+
+[Initial program]
+
+module Main where
+
+{main = do
+  {putStr hello
+  ;putStrLn world
+  ;where
+    {hello = "Hello"
+
+}}world = " World!!"
+;
+
+
+[Parser]
+
+module at (1, 1): module
+CONID at (1, 8): CONID
+where at (1, 13): where
+vocurly at (3, 1): vocurly    
+VARID at (3, 1): VARID
+= at (3, 6): =
+DO at (3, 8): DO
+vocurly at (4, 3): vocurly
+VARID at (4, 3): VARID
+VARID at (4, 10): VARID
+; at (5, 3): ;
+VARID at (5, 3): VARID
+VARID at (5, 12): VARID
+; at (6, 3): ;
+lookActionTable failed (1st) with: "where at (6, 3): where"
+lookActionTable succeeded (2nd) with: vccurly at (6, 3): vccurly   <== 
+vccurly at (6, 3): vccurly
+where at (6, 3): where
+vocurly at (7, 5): vocurly
+VARID at (7, 5): VARID
+= at (7, 11): =
+STRING at (7, 13): STRING
+vccurly at (9, 1): vccurly
+vccurly at (9, 1): vccurly     =====> Generated too hastily !! Should be done after ";"!
+lookActionTable failed (1st) with: "; at (9, 1): ;"
+lookActionTable failed (2nd) with: vccurly at (9, 1): vccurly     <==
+lexer-exe: NotFoundAction: 1091 ; at (9, 1): ;
+
+module Main where
+
+{main = do
+  {putStr hello
+  ;putStrLn world
+  ;}where
+    {hello = "Hello"
+
+}}world = " World!!"
+;
+
+
+
+
+[Note]
+
+module Main where
+
+{main = do
+  {putStr hello
+  ;putStrLn world
+  ;}where
+    {hello = "Hello"
+
+}
+
+상태가 되었을 때 뒤에 어떤 내용이 나오느냐에 따라 다음 토큰이
+결정된다.
+
+ i) 아무 내용이 없다면: }
+
+    - lexer가 EOF를 parser에 주면
+    - parser는 action not found로 파스 에러를 낸다.
+    - lexer가 }를 추가하고 다시 parser를 호출
+
+ ii) main = do ... 와 같은 수준의 world = " World!!" 바인딩이라면: ;
+
+    - lexer가 world를 identifier 토큰을 parser에게 주면
+    - parser는 action not found로 파스 에러를 낸다. 
+    - lexer는 이 identifier 토큰 앞에 ;를 추가하고 다시 parser를 호출
+
+
+ToDo
+
+ - Parser driven token generator 방식을 구현
+
+ - Shift에서 action not found error가 발생하면 }를 추가!
+   Reduce에서 발생한 parse error는 추가 조처 없음 
+
+   	      

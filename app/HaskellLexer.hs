@@ -16,12 +16,13 @@ import Fingerprint
 import GHC.Platform
 import Lexer (Token(..), lexer, mkPState, P(..), PState, ParseResult(..))
 import PlatformConstants
-import SrcLoc (Located, GenLocated(..), SrcSpan(..)
+import SrcLoc (Located, GenLocated(..), SrcSpan(..), unLoc
               , mkRealSrcLoc, mkRealSrcSpan
               , srcSpanStartLine, srcSpanStartCol, srcSpanEndLine, srcSpanEndCol)
 import StringBuffer
 import ToolSettings
 
+import Debug.Trace
 
 {-
 [Lexer]
@@ -119,6 +120,10 @@ type MyRealSrcSpan = (Int,Int,Int,Int)
 type Line = Int
 type Column = Int
 
+lexerDbg queueComments cont = lexer queueComments contDbg
+  where
+    contDbg tok = trace ("token: " ++ show (unLoc tok)) (cont tok)
+    
 haskellLexer :: P (Line, Column, [Terminal Token])
 haskellLexer = do
   (line, col, ss) <- tokInfos []
@@ -128,6 +133,7 @@ haskellLexer = do
     singleHaskellToken :: P (Located Token)
     singleHaskellToken =
       Lexer.lexer False
+      -- lexerDbg False
         (\locatedToken -> P (\pstate -> POk pstate locatedToken))
 
     tokInfos :: [Terminal Token] -> P (Line, Column, [Terminal Token])
@@ -135,12 +141,12 @@ haskellLexer = do
       locatedToken <- singleHaskellToken
       case locatedToken of
         L srcspan ITeof ->
-          let (start_line, start_col, end_line, end_col) = srcSpanToLineCol srcspan in
-          return (end_line, end_col, s)
+          let (start_line, start_col, end_line, end_col) = srcSpanToLineCol srcspan 
+          in  return (end_line, end_col, s)
           
         L srcspan tok ->
-          let (start_line, start_col, end_line, end_col) = srcSpanToLineCol srcspan in
-          tokInfos (Terminal (hiddenText tok) start_line start_col (Just tok) : s)
+          let (start_line, start_col, end_line, end_col) = srcSpanToLineCol srcspan 
+          in  tokInfos (Terminal (hiddenText tok) start_line start_col (Just tok) : s)
 
     srcSpanToLineCol :: SrcSpan -> MyRealSrcSpan
     srcSpanToLineCol (RealSrcSpan realSrcSpan') =
