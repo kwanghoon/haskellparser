@@ -46,7 +46,7 @@ module Main where
 
 {main = do
   {putStr hello
-  ;putStrLn world
+    ;putStrLn world
   ;where
     {hello = "Hello"
 
@@ -134,3 +134,106 @@ ToDo
    Reduce에서 발생한 parse error는 추가 조처 없음 
 
    	      
+=====
+
+Error recovery (Parser.hs compiled from Parser.y)
+
+-----------------------------------------------------------------------------
+-- Error recovery (ERROR_TOK is the error token)
+
+-- parse error if we are in recovery and we fail again
+happyFail explist 0# tk old_st _ stk@(x `HappyStk` _) =
+     let i = (case Happy_GHC_Exts.unsafeCoerce# x of { (Happy_GHC_Exts.I# (i)) -> i }) in
+--      trace "failing" $ 
+        happyError_ explist i tk
+
+{-  We don't need state discarding for our restricted implementation of
+    "error".  In fact, it can cause some bogus parses, so I've disabled it
+    for now --SDM
+
+-- discard a state
+happyFail  ERROR_TOK tk old_st CONS(HAPPYSTATE(action),sts) 
+                                                (saved_tok `HappyStk` _ `HappyStk` stk) =
+--      trace ("discarding state, depth " ++ show (length stk))  $
+        DO_ACTION(action,ERROR_TOK,tk,sts,(saved_tok`HappyStk`stk))
+-}
+
+-- Enter error recovery: generate an error token,
+--                       save the old token and carry on.
+happyFail explist i tk (action) sts stk =
+--      trace "entering error recovery" $
+        happyDoAction 0# tk action sts ((Happy_GHC_Exts.unsafeCoerce# (Happy_GHC_Exts.I# (i))) `HappyStk` stk
+
+
+=====
+
+happyDoAction :: () => Happy_GHC_Exts.Int# -> (Located Token) -> Happy_GHC_Exts.Int# -> Happy_IntList -> HappyStk (HappyAbsSyn ) -> P (HappyAbsSyn )
+
+happyDoAction i tk st
+        = {- nothing -}
+          case action of
+                0#           -> {- nothing -}
+                                     happyFail (happyExpListPerState ((Happy_GHC_Exts.I# (st)) :: Int)) i tk st
+                -1#          -> {- nothing -}
+                                     happyAccept i tk st
+                n | LT(n,(0# :: Happy_GHC_Exts.Int#)) -> {- nothing -}
+                                                   (happyReduceArr Happy_Data_Array.! rule) i tk st
+                                                   where rule = (Happy_GHC_Exts.I# ((Happy_GHC_Exts.negateInt# ((n Happy_GHC_Exts.+# (1# :: Happy_GHC_Exts.Int#))))))
+                n                 -> {- nothing -}
+                                     happyShift new_state i tk st
+                                     where new_state = (n Happy_GHC_Exts.-# (1# :: Happy_GHC_Exts.Int#))
+   where off    = happyAdjustOffset (indexShortOffAddr happyActOffsets st)
+         off_i  = (off Happy_GHC_Exts.+# i)
+         check  = if GTE(off_i,(0# :: Happy_GHC_Exts.Int#))
+                  then EQ(indexShortOffAddr happyCheck off_i, i)
+                  else False
+         action
+          | check     = indexShortOffAddr happyTable off_i
+          | otherwise = indexShortOffAddr happyDefActions st
+
+
+=====
+
+(Group1)
+
+L (<n>: ts) (m : ms) 
+  = ; : (L ts (m : ms))  if m = n
+  = } : (L (< n >: ts) ms) if n < m
+
+
+(Group2)
+
+L (<n>: ts) ms = L ts ms
+
+
+(Group3)
+
+L ({n} : ts) (m : ms) = { : (L ts (n : m : ms))  if n > m 
+L ({n} : ts) []       = { : (L ts [n])           if n > 0
+L ({n} : ts) ms       = { : } : (L (<n>: ts) ms)
+
+
+(Group4)
+
+L (} : ts) (0 : ms) = } : (L ts ms)
+L (} : ts) ms       = parse-error
+L ({ : ts) ms       = { : (L ts (0 : ms))
+
+
+(Group5)
+
+L (t : ts) (m : ms) = } : (L (t : ts) ms)  if m/ = 0 and parse-error(t)
+
+
+(Group6)
+
+L (t : ts) ms = t : (L ts ms)
+
+
+(Group7)
+
+L [ ] [] = []
+L [ ] (m : ms) = } : L [ ] ms if m /= 0
+
+L (t : ts) (m : ms) = } : (L (t : ts) ms)  if m /= 0 and parse-error(t)
+

@@ -1,8 +1,8 @@
 module Main where
 
 main = do
-  putStr hello
-  putStrLn world
+    putStr hello
+    putStrLn world
   where
     hello = "Hello"
 

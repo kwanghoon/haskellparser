@@ -1,4 +1,4 @@
-module HaskellLexer (mainHaskellLexer, mainHaskellLexerWithLineColumn) where
+module HaskellLexer (haskellLexer, haskellLexerWithLineColumn) where
 
 -- [NOTE]
 -- To use modules in ghc-parser-lib package,
@@ -23,6 +23,7 @@ import StringBuffer
 import ToolSettings
 
 import Debug.Trace
+import Data.Either
 
 {-
 [Lexer]
@@ -74,48 +75,40 @@ import Debug.Trace
           }
     deriving Eq
 
+  newtype P a = P { unP :: PState -> ParseResult a }
+
 -}
 
 
 --
-mainHaskellLexer :: String -> IO [Terminal Token]
-mainHaskellLexer str = do
-  case runHaskellLexer str of
+haskellLexer :: String -> IO [Terminal Token]
+haskellLexer str = do
+  (_,_,tokens) <- haskellLexerWithLineColumn 1 1 str
+  return tokens
+  
+haskellLexerWithLineColumn :: Line -> Column -> String -> IO (Line, Column, [Terminal Token])
+haskellLexerWithLineColumn line0 col0 str = do
+  case runHaskellLexerWithLineColumn line0 col0 str of
     POk parseState (line, col, ss)  ->
-      return (ss ++ [ Terminal (fromToken ITeof) line col (Just ITeof) ])
-      -- return (ss ++ [ Terminal (fromToken ITvccurly) line col (Just ITvccurly)
-      --               , Terminal (fromToken ITeof) line col (Just ITeof) ])
-    PFailed parseState -> return [] -- putStrLn "PFailed..."
-
-mainHaskellLexerWithLineColumn :: Line -> Column -> String -> IO (Line, Column, [Terminal Token])
-mainHaskellLexerWithLineColumn line0 col0 str = do
-  case runHaskellLexer str of
-    POk parseState (line, col, ss)  ->
-      return (line+line0-1, col+col0-1,
-               map (\(Terminal text l c tok) -> Terminal text (l+line0-1) (c+col0-1) tok)
-                 (ss  ++ [ Terminal (fromToken ITeof) line col (Just ITeof) ]))
+      return (line, col, ss ++ [ Terminal (fromToken ITeof) line col (Just ITeof) ])
     PFailed parseState -> return (0, 0, []) -- putStrLn "PFailed..."
 
 -- Actually, run a lexer
 runHaskellLexer :: String -> ParseResult (Line, Column, [Terminal Token])
-runHaskellLexer str = unP haskellLexer parseState
+runHaskellLexer str = runHaskellLexerWithLineColumn 1 1 str
+
+runHaskellLexerWithLineColumn :: Line -> Column -> String -> ParseResult (Line, Column, [Terminal Token])
+runHaskellLexerWithLineColumn line col str = unP allHaskellTokens (initParseState line col str)
+
+initParseState line col str = parseState
   where
     filename = "<interactive>"
-    location = mkRealSrcLoc (mkFastString filename) 1 1
+    location = mkRealSrcLoc (mkFastString filename) line col
     buffer = stringToStringBuffer str
     parseState = mkPState dynFlags buffer location
 
 -- Haskell lexer getting all tokens until ITeof
 type MyRealSrcSpan = (Int,Int,Int,Int)
--- type TokenInfo = (MyRealSrcSpan,String)
-
--- prTokInfos :: [TokenInfo] -> IO ()
--- prTokInfos ss =
---   mapM_
---     (\(srcSpan,tokName) -> do
---         putStr (show srcSpan ++ ": ")
---         putStrLn tokName)
---     ss
 
 type Line = Int
 type Column = Int
@@ -123,36 +116,41 @@ type Column = Int
 lexerDbg queueComments cont = lexer queueComments contDbg
   where
     contDbg tok = trace ("token: " ++ show (unLoc tok)) (cont tok)
-    
-haskellLexer :: P (Line, Column, [Terminal Token])
-haskellLexer = do
-  (line, col, ss) <- tokInfos []
-  return (line, col, reverse ss)
-  where
-    -- Haskell lexer getting a single token
-    singleHaskellToken :: P (Located Token)
-    singleHaskellToken =
-      Lexer.lexer False
-      -- lexerDbg False
-        (\locatedToken -> P (\pstate -> POk pstate locatedToken))
 
+singleHaskellToken :: P (Located Token)
+singleHaskellToken =
+  Lexer.lexer False
+  -- lexerDbg False
+    (\locatedToken -> P (\pstate -> POk pstate locatedToken))
+
+-- Converting a located token into either a terminal or the location of ITeof:
+toTerminalToken :: Located Token -> Either (Terminal Token) (Line, Column)
+toTerminalToken locatedToken =
+  case locatedToken of
+    L srcspan tok ->
+      let { (start_line, start_col, end_line, end_col) = srcSpanToLineCol srcspan } in  -- Todo: hslexer parse error without { and }
+        case tok of 
+          ITeof -> Right (end_line, end_col)
+          _ -> Left $ Terminal (hiddenText tok) start_line start_col (Just tok)
+    
+allHaskellTokens :: P (Line, Column, [Terminal Token])
+allHaskellTokens = do
+    (line, col, ss) <- tokInfos []  -- Todo: hslexer parse error withtout the indentation '  ' before '('
+    return (line, col, reverse ss)
+  where
     tokInfos :: [Terminal Token] -> P (Line, Column, [Terminal Token])
     tokInfos s = do
       locatedToken <- singleHaskellToken
-      case locatedToken of
-        L srcspan ITeof ->
-          let (start_line, start_col, end_line, end_col) = srcSpanToLineCol srcspan 
-          in  return (end_line, end_col, s)
-          
-        L srcspan tok ->
-          let (start_line, start_col, end_line, end_col) = srcSpanToLineCol srcspan 
-          in  tokInfos (Terminal (hiddenText tok) start_line start_col (Just tok) : s)
+      case toTerminalToken locatedToken of
+        Left terminal -> tokInfos (terminal : s)
+        Right (end_line, end_col) -> return (end_line, end_col, s)
 
-    srcSpanToLineCol :: SrcSpan -> MyRealSrcSpan
-    srcSpanToLineCol (RealSrcSpan realSrcSpan') =
-      (srcSpanStartLine realSrcSpan', srcSpanStartCol realSrcSpan'
-      ,srcSpanEndLine realSrcSpan', srcSpanEndCol realSrcSpan')
-    srcSpanToLineCol (UnhelpfulSpan _) = (0,0,0,0)
+-- Util
+srcSpanToLineCol :: SrcSpan -> MyRealSrcSpan
+srcSpanToLineCol (RealSrcSpan realSrcSpan') =
+  (srcSpanStartLine realSrcSpan', srcSpanStartCol realSrcSpan'
+  ,srcSpanEndLine realSrcSpan', srcSpanEndCol realSrcSpan')
+srcSpanToLineCol (UnhelpfulSpan _) = (0,0,0,0)
 
 -- GHC flags necessary for Lexer.lexer to build parser states
 -- Made a dummy flag!

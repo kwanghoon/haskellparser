@@ -71,7 +71,7 @@ _main (fileName:args) = do
   text <- readFile fileName
   
   putStrLn $ "Lexing: "
-  terminalList <- mainHaskellLexer text
+  terminalList <- haskellLexer text
   
   case terminalList of
     [] -> putStrLn "failed..."
@@ -86,6 +86,40 @@ _main (fileName:args) = do
              putStrLn ""
              putStrLn $ "Done: " ++ show ast
 
+-- --
+-- init :: Line -> Column -> String -> (Bool -> P (Terminal Token))
+-- init line col str = \b -> unP (next b) (initParseState line col str)
+
+-- next :: Bool -> P (Terminal Token)
+-- next True = do
+--   popContext
+--   next False
+
+-- next False = do 
+--   token <- singleHaskellToken
+--   case toTerminalToken token of
+--     Left terminalToken -> return terminalToken
+--     Right (line, col) -> error "Not implemented: nextTerminal"
+
+-- _mainRevised [] = return ()
+-- _mainRevised (fileName:args) = do
+--   putStrLn $ "Reading: " ++ fileName
+  
+--   text <- readFile fileName
+  
+--   putStrLn $ "Lexing & Parsing: "
+--   terminalList <- haskellLexer text
+  
+--   debugOpt <- getDebugOption
+
+--   ast <- runAutomatonHaskell debugOpt (AutomatonSpec { am_initState=0,
+--            am_actionTbl=haskell_actionTable, am_gotoTbl=haskell_gotoTable, am_prodRules=haskell_prodRules,
+--            am_parseFuns=pFunList}) terminalList
+--            (Just ITvccurly) -- Haskell option
+--   putStrLn ""
+--   putStrLn $ "Done: " ++ show ast
+
+--
 _mainGenCand withInfo debug maxLevel [] = return ()
 _mainGenCand withInfo debug maxLevel (fileName:args) = do
   putStrLn "Haskell code:"
