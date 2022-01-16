@@ -1,4 +1,4 @@
-module HaskellLexer (haskellLexer, haskellLexerWithLineColumn) where
+module HaskellLexer (aHaskellLexer,initParseState,HaskellParseState) where
 
 -- [NOTE]
 -- To use modules in ghc-parser-lib package,
@@ -8,6 +8,7 @@ module HaskellLexer (haskellLexer, haskellLexerWithLineColumn) where
 
 import Terminal
 import TokenInterface
+import qualified CommonParserUtil as CPU
 import HaskellToken
 
 import DynFlags
@@ -24,6 +25,10 @@ import ToolSettings
 
 import Debug.Trace
 import Data.Either
+import qualified Control.Monad.Trans.State.Lazy as ST
+import Control.Monad.Trans.Class
+import Control.Exception
+import Debug.Trace (trace)
 
 {-
 [Lexer]
@@ -79,8 +84,56 @@ import Data.Either
 
 -}
 
+--------------------------------------------------------------------------------
+-- | A demand-driven Haskell lexer
+--------------------------------------------------------------------------------
 
---
+type HaskellParseState = PState
+
+aHaskellLexer
+  :: Bool ->
+     ST.StateT
+       (PState, CPU.Line, CPU.Column, String)
+       IO
+       (Terminal Token)
+aHaskellLexer flag =
+  do (parseState,currLine,currCol,_) <- ST.get
+       
+     case unP tokInfo parseState of
+       POk nextParseState (line,col,maybeTerminal) ->
+                           
+         case maybeTerminal of
+           Just terminal ->
+             do debug flag (terminalToString terminal) $
+                  ST.put (nextParseState, line, col, "")
+                return terminal
+             
+           Nothing ->
+             return (Terminal (fromToken haskell_end_of_token)
+                              line col
+                              (Just haskell_end_of_token))
+                
+            
+       PFailed nextParseState ->
+         do ST.put (nextParseState, currLine, currCol, "")
+            throw (CPU.LexError currLine currCol "[Haskell lex error] PFiled")
+            
+  where
+    tokInfo :: P (CPU.Line, CPU.Column, Maybe (Terminal Token))
+    tokInfo = do
+      locatedToken <- singleHaskellToken
+      let (start_line, start_col, end_line, end_col) =
+            case locatedToken of
+              L srcspan tok -> srcSpanToLineCol srcspan
+
+      case toTerminalToken locatedToken of
+        Left terminal -> return (start_line, start_col, Just terminal)
+        Right _       -> return (start_line, start_col, Nothing) -- End of tokens!
+
+--------------------------------------------------------------------------------
+-- | Another haskell lexer 
+--------------------------------------------------------------------------------
+
 haskellLexer :: String -> IO [Terminal Token]
 haskellLexer str = do
   (_,_,tokens) <- haskellLexerWithLineColumn 1 1 str
@@ -196,3 +249,7 @@ dynFlags = defaultDynFlags settings llvmConfig
 
 
   defaultLlvmConfig = LlvmConfig [] []
+
+-- Utilities
+debug :: Bool -> String -> a -> a
+debug flag msg x = if flag then trace msg x else x

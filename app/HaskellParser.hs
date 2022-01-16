@@ -2,6 +2,8 @@ module HaskellParser where
 
 import AutomatonType
 
+-- pFunList available at HaskellAST.hs
+
 -- ProdRules:
 
 haskell_prodRules :: ProdRules
@@ -812,17 +814,17 @@ haskell_prodRules =
     ("literal",["PRIMFLOAT"]),
     ("literal",["PRIMDOUBLE"]),
     ("close",["vccurly"]),
-    ("close",["error"]),
-    ("modid",["CONID"]),
-    ("modid",["QCONID"]),
-    ("commas",["commas",","]),
-    ("commas",[","]),
-    ("bars0",["bars"]),
-    ("bars0",[]),
-    ("bars",["bars","|"]),
-    ("bars",["|"]),
-    ("exp_prag__exp__",["prag_e","exp"]),
-    ("exp_prag__exp10p__",["prag_e","exp10p"])
+    ("close",["error"]),                       -- 806 (805 from zero)
+    ("modid",["CONID"]),                       -- 807
+    ("modid",["QCONID"]),                      -- 808
+    ("commas",["commas",","]),                 -- 809
+    ("commas",[","]),                          -- 810
+    ("bars0",["bars"]),                        -- 811
+    ("bars0",[]),                              -- 812
+    ("bars",["bars","|"]),                     -- 813
+    ("bars",["|"]),                            -- 814
+    ("exp_prag__exp__",["prag_e","exp"]),      -- 815
+    ("exp_prag__exp10p__",["prag_e","exp10p"]) -- 816
   ]
 
 -- ActionTable:

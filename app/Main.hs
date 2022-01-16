@@ -14,9 +14,7 @@ import HaskellAST
 import HaskellParserUtil
 
 import Terminal
-import SyntaxCompletion (computeCandHaskell, CC_HaskellOption(..))
-
-import CommonParserUtil (runAutomatonHaskell, AutomatonSpec(..))
+import CommonParserUtil (runAutomaton, AutomatonSpec(..))
 
 import System.IO
 import System.Environment (getArgs, withArgs)
@@ -24,7 +22,7 @@ import System.Environment (getArgs, withArgs)
 -- | syntax completion
 import EmacsServer
 
-import SyntaxCompletion (computeCandHaskell)
+import SyntaxCompletion (computeCand)
 import SyntaxCompletionSpec (spec)
 
 
@@ -48,10 +46,7 @@ main = do
   else if null args /= True && "emacs" == head args
   then do maxLevel <- getMaxLevel
           emacsServer
-            (\ptuc ptac ism -> computeCandHaskell False maxLevel ptuc ptac ism
-                                 (CC_HaskellOption {
-                                    vccurly_token=Just ITvccurly,
-                                    nonterminalFormatFun=Just haskell_convFun}))
+            (\ptuc ptac ism -> computeCand False maxLevel ptuc ptac ism)
   else _main args
 
 getMaxLevel = do
@@ -70,21 +65,20 @@ _main (fileName:args) = do
   
   text <- readFile fileName
   
-  putStrLn $ "Lexing: "
-  terminalList <- haskellLexer text
-  
-  case terminalList of
-    [] -> putStrLn "failed..."
-    _  -> do putStrLn $ "Parsing: "
-             debugOpt <- getDebugOption
-             mapM_ (\terminal -> putStrLn $ terminalToString terminal) terminalList
-             putStrLn ""
-             ast <- runAutomatonHaskell debugOpt (AutomatonSpec { am_initState=0,
-                      am_actionTbl=haskell_actionTable, am_gotoTbl=haskell_gotoTable, am_prodRules=haskell_prodRules,
-                      am_parseFuns=pFunList}) terminalList
-                      (Just ITvccurly) -- Haskell option
-             putStrLn ""
-             putStrLn $ "Done: " ++ show ast
+  putStrLn $ "Parsing: "
+  -- debugOpt <- getDebugOption
+  let debugOpt = False
+  -- mapM_ (\terminal -> putStrLn $ terminalToString terminal) terminalList
+  -- putStrLn ""
+  ast <- runAutomaton debugOpt (AutomatonSpec { am_initState=0,
+           am_actionTbl=haskell_actionTable,
+           am_gotoTbl=haskell_gotoTable,
+           am_prodRules=haskell_prodRules,
+           am_parseFuns=pFunList})
+           (initParseState 1 1 text,1,1,text)
+           aHaskellLexer
+  putStrLn ""
+  putStrLn $ "Done: " ++ show ast
 
 -- --
 -- init :: Line -> Column -> String -> (Bool -> P (Terminal Token))
@@ -131,10 +125,7 @@ _mainGenCand withInfo debug maxLevel (fileName:args) = do
   putStrLn hscode_after
   
   putStrLn "Computing...:"
-  results <- computeCandHaskell debug maxLevel hscode_before hscode_after True
-                        (CC_HaskellOption {
-                          vccurly_token=Just ITvccurly,
-                          nonterminalFormatFun=if withInfo then Just haskell_convFun else Nothing})
+  results <- computeCand debug maxLevel hscode_before hscode_after True
   putStrLn "Candidates:"
   mapM_ putStrLn $ map show results
   _mainGenCand withInfo debug maxLevel args

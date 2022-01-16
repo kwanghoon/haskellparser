@@ -1,7 +1,7 @@
 module SyntaxCompletionSpec where
 
 import Lexer(Token(..))
-import SyntaxCompletion (computeCandHaskell, CC_HaskellOption(..))
+import SyntaxCompletion (computeCand)
 import SynCompInterface
 import Test.Hspec
 import HaskellParserUtil
@@ -18,17 +18,11 @@ spec debug maxLevel args =
 
         mapM_ (\(name,hscode) -> do
           it ("[simple] " ++ name) $ do
-            results <- computeCandHaskell debug maxLevel hscode hscode_after True
-                        (CC_HaskellOption {
-                            vccurly_token=Just ITvccurly,
-                            nonterminalFormatFun=Just haskell_convFun})
+            results <- computeCand debug maxLevel hscode hscode_after True
             results `shouldBe` []
 
           it ("[nested] " ++ name) $ do
-            results <- computeCandHaskell debug maxLevel hscode hscode_after False
-                        (CC_HaskellOption {
-                            vccurly_token=Just ITvccurly,
-                            nonterminalFormatFun=Just haskell_convFun})
+            results <- computeCand debug maxLevel hscode hscode_after False
             results `shouldBe` []
 
               ) nameHscodes

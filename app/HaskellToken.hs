@@ -12,6 +12,9 @@ import TokenInterface
 --   (1)   ITdo _ vs ITdo
 --   (2)   Support ITlolly or not
 
+haskell_end_of_token :: Token
+haskell_end_of_token = ITeof
+
 instance TokenInterface Token where
   fromToken (ITunderscore) = "_"
   fromToken (ITas) = "as"
@@ -162,6 +165,9 @@ instance TokenInterface Token where
   fromToken ((ITqQuasiQuote _)) = "TH_QQUASIQUOTE"
   fromToken (ITeof) = "%eof"
   -- fromToken (???) = error
+
+  isEOT ITeof = True
+  isEOT _     = False
   
 hiddenText (ITvarsym fs) = unpackFS fs
 hiddenText (ITconsym fs) = unpackFS fs

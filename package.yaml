@@ -23,6 +23,8 @@ dependencies:
 - base >= 4.7 && < 5
 - yapb >= 0.1.4
 - hspec
+- transformers
+- mtl
 
 library:
   source-dirs: src
