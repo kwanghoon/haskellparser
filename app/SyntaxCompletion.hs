@@ -15,6 +15,7 @@ import System.IO
 
 -- for syntax completion
 import SynCompInterface
+import SynCompAlgorithm
 import Control.Exception
 
 -- Todo: The following part should be moved to the library.
@@ -43,8 +44,10 @@ computeCand debug maxLevel programTextUptoCursor programTextAfterCursor isSimple
            _ ->
              {- 2. Lexing the rest and computing candidates with it -}
              do let (_,line,column,programTextAfterCursor) = lpStateFrom parseError
+                compCandidates <- chooseCompCandidatesFn
                 
                 handleParseError
+                  compCandidates
                   (defaultHandleParseError {
                       debugFlag=debug,
                       searchMaxLevel=maxLevel,
