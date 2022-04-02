@@ -4,7 +4,7 @@ import AutomatonType
 
 -- pFunList available at HaskellAST.hs
 
--- ProdRules:
+-- ProdRules:  816 production rules
 
 haskell_prodRules :: ProdRules
 haskell_prodRules =
@@ -829,7 +829,7 @@ haskell_prodRules =
 
 -- ActionTable:
 
-haskell_actionTable :: ActionTable
+haskell_actionTable :: ActionTable  -- 49551
 haskell_actionTable =
   [
     ((0,"error"),Reduce 65),
@@ -50386,7 +50386,7 @@ haskell_actionTable =
   ]
 
 -- GotoTable:
-haskell_gotoTable :: GotoTable
+haskell_gotoTable :: GotoTable -- 5636
 haskell_gotoTable =
   [
     ((0,"module"),255),
