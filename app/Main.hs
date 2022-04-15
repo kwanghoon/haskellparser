@@ -34,7 +34,7 @@ main = do
   if null args /= True && "test" == head args
   then do maxLevel <- getMaxLevel
           debug <- getDebugOption
-          withArgs [] $ spec debug maxLevel (tail args)
+          withArgs [] $ spec debug (tail args)
   else if null args /= True && "candidate" == head args
   then do maxLevel <- getMaxLevel
           debug <- getDebugOption
@@ -46,13 +46,14 @@ main = do
   else if null args /= True && "emacs" == head args
   then do maxLevel <- getMaxLevel
           emacsServer
-            (\ptuc ptac ism -> computeCand False maxLevel ptuc ptac ism)
+            (\ptuc ptac ism -> computeCand False ptuc ptac ism)
   else _main args
 
 getMaxLevel = do
-  putStrLn "Max level for search (e.g., 100): "
-  maxLevel_str <- getLine
-  return (read maxLevel_str :: Int)
+  return ()
+  -- putStrLn "Max level for search (e.g., 100): "
+  -- maxLevel_str <- getLine
+  -- return (read maxLevel_str :: Int)
 
 getDebugOption = do
   putStrLn "Debug option (True/False): "
@@ -125,7 +126,7 @@ _mainGenCand withInfo debug maxLevel (fileName:args) = do
   putStrLn hscode_after
   
   putStrLn "Computing...:"
-  results <- computeCand debug maxLevel hscode_before hscode_after True
+  results <- computeCand debug hscode_before hscode_after True
   putStrLn "Candidates:"
   mapM_ putStrLn $ map show results
   _mainGenCand withInfo debug maxLevel args

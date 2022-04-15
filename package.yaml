@@ -21,7 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
-- yapb >= 0.2.3
+- yapb >= 0.2.4
 - hspec
 - transformers
 - mtl
@@ -44,10 +44,13 @@ executables:
 tests:
   lexer-test:
     main:                Spec.hs
-    source-dirs:         test
+    source-dirs:         
+    - test
+    - app
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - lexer
+    - ghc-lib-parser

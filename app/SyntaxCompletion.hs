@@ -8,6 +8,7 @@ import HaskellParserUtil(haskell_convFun)
 import HaskellAST
 import HaskellToken
 import Terminal
+import HaskellFilter
 
 import CommonParserUtil 
 
@@ -23,9 +24,11 @@ import Control.Exception
 --                  isSimpleMode
 --                  programTextUptoCursor, programTextAfterCursor
 
+maxLevel = 1
+
 -- | computeCand
-computeCand :: Bool -> Int -> String -> String -> Bool -> IO [EmacsDataItem]
-computeCand debug maxLevel programTextUptoCursor programTextAfterCursor isSimpleMode =
+computeCand :: Bool -> String -> String -> Bool -> IO [EmacsDataItem]
+computeCand debug programTextUptoCursor programTextAfterCursor isSimpleMode =
   {- 1. Parsing -}
   ((do ast <- runAutomaton debug
                 (AutomatonSpec {
@@ -45,15 +48,18 @@ computeCand debug maxLevel programTextUptoCursor programTextAfterCursor isSimple
              {- 2. Lexing the rest and computing candidates with it -}
              do let (_,line,column,programTextAfterCursor) = lpStateFrom parseError
                 compCandidates <- chooseCompCandidatesFn
-                
+
+                let lexerSpec = undefined                              -- 
+                let parserSpec = ParserSpec { synCompSpec = Just (SynCompSpec {isAbleToSearch=canSearch}) }  -- partially defined
+                      
                 handleParseError
                   compCandidates
-                  (defaultHandleParseError {
+                  (defaultHandleParseError lexerSpec parserSpec) {
                       debugFlag=debug,
                       searchMaxLevel=maxLevel,
                       simpleOrNested=isSimpleMode,
                       postTerminalList=[],       -- terminalListAfterCursor,
-                      nonterminalToStringMaybe=Just haskell_convFun})  -- Just haskell_convFun
+                      nonterminalToStringMaybe=Just haskell_convFun}  -- Just haskell_convFun
                   parseError)
 
   `catch` \lexError ->  case lexError :: LexError of  _ -> handleLexError

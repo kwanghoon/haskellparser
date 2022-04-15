@@ -8,7 +8,7 @@ import HaskellParserUtil
 
 import System.IO (readFile)
 
-spec debug maxLevel args =
+spec debug args =
   do
     nameHscodes <- mapM (\arg -> do text <- readFile arg; return (arg,text)) args
     let hscode_after = ""
@@ -18,11 +18,11 @@ spec debug maxLevel args =
 
         mapM_ (\(name,hscode) -> do
           it ("[simple] " ++ name) $ do
-            results <- computeCand debug maxLevel hscode hscode_after True
+            results <- computeCand debug hscode hscode_after True
             results `shouldBe` []
 
           it ("[nested] " ++ name) $ do
-            results <- computeCand debug maxLevel hscode hscode_after False
+            results <- computeCand debug hscode hscode_after False
             results `shouldBe` []
 
               ) nameHscodes
