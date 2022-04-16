@@ -21,7 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
-- yapb >= 0.2.4
+- yapb >= 0.2.5
 - hspec
 - transformers
 - mtl
@@ -37,6 +37,7 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -O2
     dependencies:
     - lexer
     - ghc-lib-parser
@@ -51,6 +52,7 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -O2
     dependencies:
     - lexer
     - ghc-lib-parser

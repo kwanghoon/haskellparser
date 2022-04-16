@@ -14,7 +14,7 @@ import HaskellAST
 import HaskellParserUtil
 
 import Terminal
-import CommonParserUtil (runAutomaton, AutomatonSpec(..))
+import CommonParserUtil (runAutomaton, AutomatonSpec(..),AutomatonTime(..))
 
 import System.IO
 import System.Environment (getArgs, withArgs)
@@ -25,7 +25,7 @@ import EmacsServer
 import SyntaxCompletion (computeCand)
 import SyntaxCompletionSpec (spec)
 
-
+import ParserTime
 
 --
 main :: IO ()
@@ -56,6 +56,7 @@ getMaxLevel = do
   -- return (read maxLevel_str :: Int)
 
 getDebugOption = do
+  return False
   putStrLn "Debug option (True/False): "
   debug <- getLine
   return (read debug :: Bool)
@@ -67,15 +68,19 @@ _main (fileName:args) = do
   text <- readFile fileName
   
   putStrLn $ "Parsing: "
-  -- debugOpt <- getDebugOption
-  let debugOpt = False
+  debugOpt <- getDebugOption
   -- mapM_ (\terminal -> putStrLn $ terminalToString terminal) terminalList
   -- putStrLn ""
   ast <- runAutomaton debugOpt (AutomatonSpec { am_initState=0,
            am_actionTbl=haskell_actionTable,
            am_gotoTbl=haskell_gotoTable,
            am_prodRules=haskell_prodRules,
-           am_parseFuns=pFunList})
+           am_parseFuns=pFunList,
+           am_time=AutomatonTime{
+                     am_startTime=startTime,
+                     am_finishTime=finishTime,
+                     am_cputime=0
+                                }  })
            (initParseState 1 1 text,1,1,text)
            aHaskellLexer
   putStrLn ""

@@ -10,6 +10,8 @@ import HaskellToken
 import Terminal
 import HaskellFilter
 
+import ParserTime
+
 import CommonParserUtil 
 
 import System.IO
@@ -36,7 +38,13 @@ computeCand debug programTextUptoCursor programTextAfterCursor isSimpleMode =
                     am_actionTbl=haskell_actionTable,
                     am_gotoTbl=haskell_gotoTable,
                     am_prodRules=haskell_prodRules,
-                    am_parseFuns=pFunList})
+                    am_parseFuns=pFunList,
+                    am_time=AutomatonTime{
+                     am_startTime=startTime,
+                     am_finishTime=finishTime,
+                     am_cputime=0
+                                }  })
+                
                 (initParseState 1 1 programTextUptoCursor,1,1,programTextUptoCursor)
                 aHaskellLexer          -- (aLexer lexerSpec)
 
