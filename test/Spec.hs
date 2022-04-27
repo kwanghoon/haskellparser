@@ -15,7 +15,7 @@ spec = hspec $ do
   describe "Haskell" $ do
 
     let config_simple = True
-    let max_gs_level  = 9
+    let max_gs_level  = 7              -- Max GS level (9) for Smallbasic
     
     let config =
           Configuration
@@ -28,29 +28,31 @@ spec = hspec $ do
               config_PRESENTATION = 0,
               config_ALGORITHM    = 3
             }
-    
-    let benchmark1_text = "module Benchmark1 where\n\nmain = if x "   -- examples/exp/Benchmark1.hs
-    let benchmark2_text = "module Benchmark2 where\n\nmain = if x < 123 then  "  -- examples/exp/Benchmark2.hs
+
+    let benchmark1_text = "main = if x "   -- examples/exp/Benchmark1.hs
+    let benchmark2_text = "main = if x < 123 then  "  -- examples/exp/Benchmark2.hs
 
     let benchmark1 = "./examples/exp/Benchmark1.hs"
     
     it ("[Benchmark1] ") $
-      do mapM_ (itemText benchmark1_text config) [1..max_gs_level]  -- Max GS level (9) for Smallbasic
+      do mapM_ (itemText ("module Benchmark1 where\n\n" ++ benchmark1_text) config)
+           [1..max_gs_level]  
 
     let benchmark2 = "./examples/exp/Benchmark2.hs"
     
     it ("[Benchmark2] ") $
-      do mapM_ (itemText benchmark2_text config) [1..max_gs_level]  -- Max GS level (9) for Smallbasic
+      do mapM_ (itemText ("module Benchmark2 where\n\n" ++ benchmark2_text) config)
+           [1..max_gs_level]
 
     let benchmark3 = "./examples/exp/Benchmark3.hs"
 
     it ("[Benchmark3] ") $
-      do mapM_ (item benchmark3 benchmark1_text config) [1..max_gs_level]  -- Max GS level (9) for Smallbasic
+      do mapM_ (item benchmark3 benchmark1_text config) [1..max_gs_level]  
 
     let benchmark4 = "./examples/exp/Benchmark4.hs"
     
     it ("[Benchmark4] ") $
-      do mapM_ (item benchmark4 benchmark2_text config) [1..max_gs_level]  -- Max GS level (9) for Smallbasic
+      do mapM_ (item benchmark4 benchmark2_text config) [1..max_gs_level]  
 
 
 item benchmark_file text init_config gslevel = 
