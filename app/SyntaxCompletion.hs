@@ -67,7 +67,7 @@ computeCand debug programTextUptoCursor programTextAfterCursor isSimpleMode =
                       searchMaxLevel=maxLevel,
                       simpleOrNested=isSimpleMode,
                       postTerminalList=[],       -- terminalListAfterCursor,
-                      nonterminalToStringMaybe=Just haskell_convFun}  -- Just haskell_convFun
+                      nonterminalToStringMaybe=Nothing {- Just haskell_convFun -} }  -- Just haskell_convFun
                   parseError)
 
   `catch` \lexError ->  case lexError :: LexError of  _ -> handleLexError
